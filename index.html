@@ -6,9 +6,17 @@
     <title>Snake Game</title>
     <link rel="stylesheet" href="/src/style.css" />
   </head>
-  <body>
-    <div id="app">
-      <canvas id="gameCanvas"></canvas>
+<body>
+  <div id="app">
+      <div id="gameStatus" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+      <div class="sr-only" id="gameInstructions" aria-live="polite">
+        Play with arrow keys or swipe on touch devices. Press Space or P to pause, Enter to start or restart, and tap to start/resume/restart.
+      </div>
+      <canvas
+        id="gameCanvas"
+        role="img"
+        aria-label="Snake game board"
+      ></canvas>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>

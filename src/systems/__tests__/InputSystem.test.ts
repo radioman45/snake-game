@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+﻿import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { InputSystem } from '../InputSystem'
 import { Direction } from '../../utils/types'
 
@@ -6,42 +6,45 @@ describe('InputSystem', () => {
   let input: InputSystem
 
   beforeEach(() => {
+    vi.restoreAllMocks()
     input = new InputSystem()
   })
 
-  describe('방향 입력 (AC-007)', () => {
-    it('ArrowUp 키로 UP 방향 설정', () => {
-      // RIGHT로 이동 중이므로 UP 설정 가능
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  describe('Arrow key mapping', () => {
+    it('maps ArrowUp to UP', () => {
       input.handleKey('ArrowUp')
       expect(input.getQueuedDirection()).toBe(Direction.UP)
     })
 
-    it('ArrowDown 키로 DOWN 방향 설정', () => {
+    it('maps ArrowDown to DOWN', () => {
       input.handleKey('ArrowDown')
       expect(input.getQueuedDirection()).toBe(Direction.DOWN)
     })
 
-    it('ArrowLeft 키로 LEFT 방향 설정', () => {
-      // 초기 방향이 RIGHT이면 LEFT는 반대방향 (InputSystem 레벨에서는 받고 Snake 레벨에서 무시)
+    it('maps ArrowLeft to LEFT', () => {
       input.handleKey('ArrowLeft')
       expect(input.getQueuedDirection()).toBe(Direction.LEFT)
     })
 
-    it('ArrowRight 키로 RIGHT 방향 설정', () => {
+    it('maps ArrowRight to RIGHT', () => {
       input.handleKey('ArrowRight')
       expect(input.getQueuedDirection()).toBe(Direction.RIGHT)
     })
   })
 
-  describe('일시정지 토글 (AC-009)', () => {
-    it('Space 키 입력 감지', () => {
+  describe('Pause action', () => {
+    it('fires pause handler on Space', () => {
       const pauseHandler = vi.fn()
       input.onPauseToggle(pauseHandler)
       input.handleKey(' ')
       expect(pauseHandler).toHaveBeenCalledOnce()
     })
 
-    it('P 키 입력 감지', () => {
+    it('fires pause handler on P', () => {
       const pauseHandler = vi.fn()
       input.onPauseToggle(pauseHandler)
       input.handleKey('p')
@@ -49,8 +52,8 @@ describe('InputSystem', () => {
     })
   })
 
-  describe('게임 시작 키 (AC-017)', () => {
-    it('Enter 키 입력 감지', () => {
+  describe('Start action', () => {
+    it('fires start handler on Enter', () => {
       const startHandler = vi.fn()
       input.onStartGame(startHandler)
       input.handleKey('Enter')
@@ -58,11 +61,66 @@ describe('InputSystem', () => {
     })
   })
 
-  describe('방향 큐 소비', () => {
-    it('getQueuedDirection() 호출 후 null 반환', () => {
+  describe('Direction queue', () => {
+    it('returns null after consuming queued direction', () => {
       input.handleKey('ArrowUp')
       input.getQueuedDirection()
       expect(input.getQueuedDirection()).toBeNull()
+    })
+  })
+
+  describe('Tap and swipe', () => {
+    it('fires tap handler for quick minimal movement', () => {
+      const tapHandler = vi.fn()
+      input.onTap(tapHandler)
+
+      vi.spyOn(performance, 'now')
+        .mockReturnValueOnce(1000)
+        .mockReturnValueOnce(1030)
+
+      input.handleTouchStart({
+        changedTouches: [{ clientX: 100, clientY: 100 } as Touch],
+        preventDefault: vi.fn(),
+      } as unknown as TouchEvent)
+      input.handleTouchEnd({
+        changedTouches: [{ clientX: 104, clientY: 104 } as Touch],
+        preventDefault: vi.fn(),
+      } as unknown as TouchEvent)
+
+      expect(tapHandler).toHaveBeenCalledOnce()
+    })
+
+    it('ignores long press as tap within handler list', () => {
+      const tapHandler = vi.fn()
+      input.onTap(tapHandler)
+
+      vi.spyOn(performance, 'now')
+        .mockReturnValueOnce(1000)
+        .mockReturnValueOnce(1300)
+
+      input.handleTouchStart({
+        changedTouches: [{ clientX: 100, clientY: 100 } as Touch],
+        preventDefault: vi.fn(),
+      } as unknown as TouchEvent)
+      input.handleTouchEnd({
+        changedTouches: [{ clientX: 100, clientY: 100 } as Touch],
+        preventDefault: vi.fn(),
+      } as unknown as TouchEvent)
+
+      expect(tapHandler).not.toHaveBeenCalled()
+      expect(input.getQueuedDirection()).toBeNull()
+    })
+
+    it('maps horizontal swipe to RIGHT direction', () => {
+      input.handleTouchStart({
+        changedTouches: [{ clientX: 100, clientY: 100 } as Touch],
+        preventDefault: vi.fn(),
+      } as unknown as TouchEvent)
+      input.handleTouchEnd({
+        changedTouches: [{ clientX: 140, clientY: 100 } as Touch],
+        preventDefault: vi.fn(),
+      } as unknown as TouchEvent)
+      expect(input.getQueuedDirection()).toBe(Direction.RIGHT)
     })
   })
 })

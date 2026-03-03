@@ -1,4 +1,10 @@
 /* 전체 페이지 다크 테마 기본 설정 */
+:root {
+  --bg: #0a0a0a;
+  --text: #e0e0e0;
+  --accent: #39ff14;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -6,8 +12,8 @@
 }
 
 body {
-  background-color: #0a0a0a;
-  color: #e0e0e0;
+  background-color: var(--bg);
+  color: var(--text);
   font-family: 'Courier New', Courier, monospace;
   display: flex;
   justify-content: center;
@@ -21,10 +27,42 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 16px;
+  width: min(95vw, 500px);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 #gameCanvas {
-  border: 2px solid #39ff14;
+  border: 2px solid var(--accent);
   box-shadow: 0 0 20px rgba(57, 255, 20, 0.3);
   display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 20 / 23;
+  touch-action: none;
+  max-width: 400px;
+  max-height: 460px;
+  image-rendering: pixelated;
+}
+
+#gameCanvas:focus-visible {
+  outline: 3px solid #9eff66;
+  outline-offset: 4px;
+}
+
+@media (max-width: 480px) {
+  #app {
+    gap: 12px;
+  }
 }
